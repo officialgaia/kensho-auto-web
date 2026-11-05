@@ -265,13 +265,16 @@ function renderStats(all) {
   const tried = count("success") + count("won") + count("failed");
   const rate = tried ? Math.round(((count("success") + count("won")) / tried) * 100) : null;
   const stats = [
-    ["応募済み", count("success") + count("won"), `今日 +${todaySuccess}`],
-    ["要手動", count("manual"), null],
-    ["失敗", count("failed"), rate === null ? null : `成功率 ${rate}%`],
-    ["当選", count("won"), `未処理 ${count("pending")}`],
+    ["応募済み", count("success") + count("won")],
+    ["当選", count("won")],
+    ["要手動", count("manual")],
+    ["失敗", count("failed")],
+    ["未処理", count("pending")],
   ];
   $("#stats").replaceChildren(
-    ...stats.map(([label, n, sub]) => el("div", { class: "stat" }, el("div", { class: "stat-n" }, n), el("div", { class: "stat-label" }, label), sub ? el("div", { class: "stat-sub" }, sub) : null)),
+    ...stats.map(([label, n]) => el("span", { class: "stat" }, label, " ", el("b", {}, n))),
+    el("span", { class: "stat muted" }, `今日 +${todaySuccess}`),
+    rate === null ? null : el("span", { class: "stat muted" }, `成功率 ${rate}%`),
   );
   const lr = state.lastRun;
   $("#last-run").textContent = lr
@@ -310,12 +313,20 @@ function card(r) {
 
   const body = el(
     "details",
-    { class: `card status-${r.status}` },
+    { class: "card" },
     el(
       "summary",
       {},
-      el("div", { class: "card-head" }, el("span", { class: `badge ${r.status}` }, STATUS_LABEL[r.status] || r.status), el("span", { class: `badge method` }, r.method.toUpperCase()), el("span", { class: `deadline${d !== null && d <= 3 && d >= 0 ? " urgent" : ""}` }, deadline)),
       titleNode,
+      el(
+        "div",
+        { class: "card-meta" },
+        el("span", { class: `st st-${r.status}` }, STATUS_LABEL[r.status] || r.status),
+        " · ",
+        r.method === "web" ? "Web" : r.method === "x" ? "X" : "その他",
+        " · ",
+        el("span", { class: d !== null && d <= 3 && d >= 0 ? "urgent" : "" }, deadline),
+      ),
       r.reason ? el("div", { class: "card-reason" }, r.reason) : null,
     ),
     el(
@@ -365,9 +376,9 @@ function renderAccounts() {
       el(
         "li",
         { class: "small" },
-        el("span", { class: `badge ${a.status === "failed" ? "failed" : "success"}` }, ACCOUNT_LABEL[a.status] || a.status),
-        " ",
         a.host,
+        " ",
+        el("span", { class: `st st-${a.status === "failed" ? "failed" : "success"}` }, ACCOUNT_LABEL[a.status] || a.status),
         a.note ? el("div", { class: "muted" }, a.note) : null,
       ),
     ),
@@ -434,8 +445,9 @@ async function loadAll() {
       getJson("data/entries.json", { entries: [], lastRun: null }),
       getJson("data/settings.json", { version: 1, sources: {} }),
       getFile("sources.yaml").then((f) => f.text).catch(() => ""),
-      getJson("data/wins.json", { wins: [] }),
-      getJson("data/accounts.json", { accounts: [] }),
+      // 任意のファイルは読めなくても一覧は表示する
+      getJson("data/wins.json", { wins: [] }).catch(() => ({ data: { wins: [] } })),
+      getJson("data/accounts.json", { accounts: [] }).catch(() => ({ data: { accounts: [] } })),
     ]);
     state.accounts = a.data.accounts || [];
     state.wins = w.data.wins || [];

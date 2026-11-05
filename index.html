@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="referrer" content="no-referrer">
   <meta name="robots" content="noindex, nofollow">
-  <meta name="theme-color" content="#0f766e">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src https://api.github.com; img-src 'self' data:; base-uri 'none'; form-action 'none'">
   <title>kensho-auto</title>
   <link rel="stylesheet" href="style.css">
@@ -15,13 +16,13 @@
   <header class="topbar">
     <h1>kensho-auto</h1>
     <div class="topbar-actions">
-      <button id="btn-reload" class="icon-btn" type="button" aria-label="再読み込み" hidden>↻</button>
-      <button id="btn-settings" class="icon-btn" type="button" aria-label="設定" hidden>⚙</button>
+      <button id="btn-reload" class="text-btn" type="button" hidden>更新</button>
+      <button id="btn-settings" class="text-btn" type="button" hidden>設定</button>
     </div>
   </header>
 
   <!-- 初期設定 -->
-  <section id="setup" class="panel" hidden>
+  <section id="setup" hidden>
     <h2>初期設定</h2>
     <p class="muted">GitHub の fine-grained Personal Access Token を使って、非公開リポジトリのデータを直接読み書きします。トークンはこの端末のブラウザ（localStorage）にだけ保存されます。</p>
     <form id="setup-form" class="stack">
@@ -40,20 +41,15 @@
   </section>
 
   <main id="app" hidden>
-    <section class="stats" id="stats" aria-label="統計"></section>
+    <p class="stats" id="stats" aria-label="統計"></p>
 
-    <section class="panel run-panel">
-      <div class="row space">
-        <div>
-          <div class="small muted">最終実行</div>
-          <div id="last-run">-</div>
-        </div>
-        <div class="row">
-          <label class="check small"><input type="checkbox" id="run-dry"> dry-run</label>
-          <button id="btn-run" class="primary" type="button">今すぐ実行</button>
-        </div>
+    <section class="run">
+      <div class="small muted">最終実行 <span id="last-run">-</span></div>
+      <div class="row">
+        <button id="btn-run" class="primary" type="button">今すぐ実行</button>
+        <label class="check small muted"><input type="checkbox" id="run-dry"> dry-run（送信しない）</label>
       </div>
-      <ul id="runs" class="runs"></ul>
+      <ul id="runs" class="runs small muted"></ul>
     </section>
 
     <nav class="tabs" id="tabs" role="tablist"></nav>
@@ -71,7 +67,7 @@
     <ul id="list" class="list"></ul>
     <p id="empty" class="muted center" hidden>該当する懸賞はありません</p>
 
-    <details class="panel" id="add-panel">
+    <details class="section" id="add-panel">
       <summary>URL を手動で追加</summary>
       <form id="add-form" class="stack">
         <label>応募ページの URL<input name="url" type="url" required placeholder="https://..." autocomplete="off"></label>
@@ -89,13 +85,13 @@
       </form>
     </details>
 
-    <details class="panel" id="accounts-panel">
+    <details class="section" id="accounts-panel">
       <summary>会員登録したサイト</summary>
       <ul id="accounts" class="sources"></ul>
       <p class="muted small">パスワードは全サイト共通（Secrets の SITE_PASSWORD）。ログインIDは応募用メールアドレスです。</p>
     </details>
 
-    <details class="panel" id="sources-panel">
+    <details class="section" id="sources-panel">
       <summary>収集元のオン／オフ</summary>
       <ul id="sources" class="sources"></ul>
       <p class="muted small">収集元の追加・編集は sources.yaml を直接編集してください。</p>
