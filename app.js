@@ -211,10 +211,14 @@ function rows() {
     const e = entryById.get(c.id);
     let status = e ? e.status : "pending";
     let reason = e ? e.reason : null;
-    // Web 以外（X・ハガキ等）で未処理のものは手動応募が必要
-    if (!e && c.method !== "web") {
+    // X のポスト・アカウントは X モジュールで自動処理。それ以外の Web 以外（ハガキ・Instagram 等）は手動
+    if (!e && c.method === "x") {
+      const isX = /^https?:\/\/(www\.|mobile\.)?(x|twitter)\.com\//.test(c.url);
+      status = isX ? "pending" : "manual";
+      reason = isX ? "X で自動処理待ち（フォロー＆リポスト）" : "X キャンペーン（投稿のURLが不明のため手動）";
+    } else if (!e && c.method !== "web") {
       status = "manual";
-      reason = c.method === "x" ? "X キャンペーン（Xモジュール無効時は手動）" : "Web フォーム以外の応募方式";
+      reason = "Web フォーム以外の応募方式";
     }
     if (!e && c.deadline && c.deadline < today) status = "closed";
     out.push({ ...c, status, reason, entry: e || null });
