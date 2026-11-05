@@ -15,6 +15,7 @@ const state = {
   campaigns: [],
   entries: [],
   wins: [],
+  accounts: [],
   lastRun: null,
   settings: { version: 1, sources: {} },
   sources: [],
@@ -349,6 +350,28 @@ function render() {
   $("#list").replaceChildren(...list.slice(0, 300).map(card));
   $("#empty").hidden = list.length > 0;
   renderSources();
+  renderAccounts();
+}
+
+const ACCOUNT_LABEL = { registered: "登録済み", logged_in: "ログイン済み", failed: "登録できず" };
+function renderAccounts() {
+  const list = [...state.accounts].sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
+  if (!list.length) {
+    $("#accounts").replaceChildren(el("li", { class: "muted small" }, "まだありません"));
+    return;
+  }
+  $("#accounts").replaceChildren(
+    ...list.map((a) =>
+      el(
+        "li",
+        { class: "small" },
+        el("span", { class: `badge ${a.status === "failed" ? "failed" : "success"}` }, ACCOUNT_LABEL[a.status] || a.status),
+        " ",
+        a.host,
+        a.note ? el("div", { class: "muted" }, a.note) : null,
+      ),
+    ),
+  );
 }
 
 function renderSources() {
@@ -406,13 +429,15 @@ function explain(e) {
 async function loadAll() {
   $("#btn-reload").disabled = true;
   try {
-    const [c, e, s, src, w] = await Promise.all([
+    const [c, e, s, src, w, a] = await Promise.all([
       getJson("data/campaigns.json", { campaigns: [] }),
       getJson("data/entries.json", { entries: [], lastRun: null }),
       getJson("data/settings.json", { version: 1, sources: {} }),
       getFile("sources.yaml").then((f) => f.text).catch(() => ""),
       getJson("data/wins.json", { wins: [] }),
+      getJson("data/accounts.json", { accounts: [] }),
     ]);
+    state.accounts = a.data.accounts || [];
     state.wins = w.data.wins || [];
     state.campaigns = c.data.campaigns || [];
     state.entries = e.data.entries || [];
