@@ -379,6 +379,7 @@ function renderAccounts() {
         a.host,
         " ",
         el("span", { class: `st st-${a.status === "failed" ? "failed" : "success"}` }, ACCOUNT_LABEL[a.status] || a.status),
+        a.passwordNo ? el("span", { class: "muted" }, ` · パスワード${a.passwordNo}`) : null,
         a.note ? el("div", { class: "muted" }, a.note) : null,
       ),
     ),
