@@ -1,1 +1,99 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0f766e"/><path d="M14 28h36v24H14z" fill="#fff"/><path d="M10 20h44v10H10z" fill="#fde68a"/><path d="M29 20h6v32h-6z" fill="#0f766e"/><path d="M32 20c-6-10-16-8-12-2 2 3 8 2 12 2zm0 0c6-10 16-8 12-2-2 3-8 2-12 2z" fill="#fde68a" stroke="#0f766e" stroke-width="2"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="35%" cy="25%" r="85%">
+      <stop offset="0" stop-color="#5b3fd1"/>
+      <stop offset="0.55" stop-color="#2e1d7a"/>
+      <stop offset="1" stop-color="#140c3d"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffe08a"/>
+      <stop offset="0.45" stop-color="#f6b93b"/>
+      <stop offset="1" stop-color="#c77d0a"/>
+    </linearGradient>
+    <linearGradient id="goldLid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff1b8"/>
+      <stop offset="1" stop-color="#f2a823"/>
+    </linearGradient>
+    <linearGradient id="ribbon" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff5a6e"/>
+      <stop offset="0.5" stop-color="#e3243b"/>
+      <stop offset="1" stop-color="#a5122a"/>
+    </linearGradient>
+    <linearGradient id="ribbonV" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff6b7d"/>
+      <stop offset="1" stop-color="#b3142d"/>
+    </linearGradient>
+    <linearGradient id="check" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4ade80"/>
+      <stop offset="1" stop-color="#15803d"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="55%" r="50%">
+      <stop offset="0" stop-color="#ffd76a" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#ffd76a" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#07041a" flood-opacity="0.55"/>
+    </filter>
+    <path id="star" d="M0 -1 C0.12 -0.25 0.25 -0.12 1 0 C0.25 0.12 0.12 0.25 0 1 C-0.12 0.25 -0.25 0.12 -1 0 C-0.25 -0.12 -0.12 -0.25 0 -1Z"/>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect x="6" y="6" width="500" height="500" rx="106" fill="none" stroke="#ffffff" stroke-opacity="0.12" stroke-width="4"/>
+
+  <!-- 紙吹雪 -->
+  <g opacity="0.9">
+    <rect x="70" y="92" width="18" height="8" rx="3" fill="#f472b6" transform="rotate(-28 79 96)"/>
+    <rect x="410" y="120" width="18" height="8" rx="3" fill="#38bdf8" transform="rotate(32 419 124)"/>
+    <rect x="96" y="372" width="16" height="7" rx="3" fill="#facc15" transform="rotate(18 104 375)"/>
+    <rect x="428" y="300" width="16" height="7" rx="3" fill="#a78bfa" transform="rotate(-40 436 303)"/>
+    <circle cx="150" cy="70" r="5" fill="#fde68a"/>
+    <circle cx="372" cy="62" r="4" fill="#f9a8d4"/>
+    <circle cx="58" cy="250" r="4" fill="#93c5fd"/>
+    <circle cx="462" cy="214" r="5" fill="#fde68a"/>
+  </g>
+
+  <!-- 光 -->
+  <circle cx="256" cy="290" r="200" fill="url(#glow)"/>
+
+  <!-- プレゼント箱 -->
+  <g filter="url(#shadow)">
+    <!-- 本体 -->
+    <rect x="128" y="236" width="256" height="178" rx="18" fill="url(#gold)"/>
+    <rect x="128" y="236" width="256" height="30" fill="#000" opacity="0.12"/>
+    <!-- ふた -->
+    <rect x="110" y="190" width="292" height="62" rx="16" fill="url(#goldLid)"/>
+    <rect x="110" y="190" width="292" height="62" rx="16" fill="none" stroke="#fff4c4" stroke-opacity="0.7" stroke-width="3"/>
+    <!-- リボン（縦） -->
+    <rect x="232" y="190" width="48" height="224" fill="url(#ribbonV)"/>
+    <rect x="240" y="190" width="10" height="224" fill="#ffffff" opacity="0.22"/>
+    <!-- リボン（ふたの帯） -->
+    <rect x="110" y="208" width="292" height="26" fill="url(#ribbon)" opacity="0.95"/>
+    <!-- 蝶結び -->
+    <path d="M256 196 C214 130 150 140 166 178 C176 202 222 204 256 196Z" fill="url(#ribbon)"/>
+    <path d="M256 196 C298 130 362 140 346 178 C336 202 290 204 256 196Z" fill="url(#ribbon)"/>
+    <path d="M190 168 C206 160 228 172 244 186" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="5" stroke-linecap="round"/>
+    <path d="M322 168 C306 160 284 172 268 186" fill="none" stroke="#ffffff" stroke-opacity="0.25" stroke-width="5" stroke-linecap="round"/>
+    <path d="M246 196 L226 240 L240 236 L248 250 Z" fill="#b3142d"/>
+    <path d="M266 196 L286 240 L272 236 L264 250 Z" fill="#b3142d"/>
+    <ellipse cx="256" cy="194" rx="20" ry="16" fill="#e3243b"/>
+    <ellipse cx="250" cy="189" rx="7" ry="5" fill="#ffffff" opacity="0.4"/>
+    <!-- 本体のつや -->
+    <path d="M146 270 L146 396" stroke="#fff6cf" stroke-opacity="0.55" stroke-width="8" stroke-linecap="round"/>
+  </g>
+
+  <!-- きらめき -->
+  <g fill="#fff7d6">
+    <use href="#star" transform="translate(112 132) scale(26)"/>
+    <use href="#star" transform="translate(404 192) scale(20)"/>
+    <use href="#star" transform="translate(392 90) scale(12)"/>
+    <use href="#star" transform="translate(86 300) scale(14)"/>
+  </g>
+
+  <!-- 応募済みチェック -->
+  <g filter="url(#shadow)">
+    <circle cx="386" cy="390" r="62" fill="url(#check)"/>
+    <circle cx="386" cy="390" r="62" fill="none" stroke="#ffffff" stroke-width="8"/>
+    <path d="M356 392 L378 414 L418 368" fill="none" stroke="#ffffff" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
