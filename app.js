@@ -287,11 +287,12 @@ function rows() {
       status = "manual";
       reason = "Web フォーム以外の応募方式";
     }
-    if (!e && c.deadline && c.deadline < today) status = "closed";
+    // 締切を過ぎた未応募の懸賞は表示しない（次の実行でデータからも消える）
+    if (c.deadline && c.deadline < today && status !== "success") continue;
     out.push({ ...c, status, reason, entry: e || null });
   }
   for (const e of state.entries) {
-    if (seen.has(e.id)) continue;
+    if (seen.has(e.id) || e.status === "closed") continue;
     seen.add(e.id);
     out.push({ id: e.id, url: e.url, title: e.title, deadline: null, prize: null, method: e.method, source: "-", addedAt: e.lastAttemptAt, status: e.status, reason: e.reason, entry: e });
   }
