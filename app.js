@@ -274,8 +274,11 @@ function rows() {
   const today = todayJst();
   const seen = new Set();
   const out = [];
+  const dropped = new Set(state.entries.filter((e) => e.status === "failed" || e.status === "manual").map((e) => e.id));
   for (const c of state.campaigns) {
     seen.add(c.id);
+    // 失敗・要手動になったものと、Web フォーム以外の応募方式は表示しない（次の実行でデータからも消える）
+    if (dropped.has(c.id) || (c.method === "other" && c.source !== "manual")) continue;
     // 「その場で当たる」X キャンペーンと、投稿が分からない X の懸賞は表示しない（次の実行でデータからも消える）
     if (c.method === "x" && c.source !== "manual" && (/その場で(当た|当選)/.test(c.title || "") || (/^https?:\/\/(www\.|mobile\.)?(x|twitter)\.com\//.test(c.url) && !parseXUrl(c.url)?.statusId))) continue;
     const e = entryById.get(c.id);
@@ -295,7 +298,7 @@ function rows() {
     out.push({ ...c, status, reason, entry: e || null });
   }
   for (const e of state.entries) {
-    if (seen.has(e.id) || e.status === "closed") continue;
+    if (seen.has(e.id) || ["closed", "failed", "manual"].includes(e.status)) continue;
     seen.add(e.id);
     out.push({ id: e.id, url: e.url, title: e.title, deadline: null, prize: null, method: e.method, source: "-", addedAt: e.lastAttemptAt, status: e.status, reason: e.reason, entry: e });
   }
@@ -318,9 +321,7 @@ const TABS = [
   { id: "soon", label: "締切間近", match: (r) => !["success", "closed"].includes(r.status) && r.deadline && daysUntil(r.deadline) >= 0 && daysUntil(r.deadline) <= SOON_DAYS },
   { id: "xtap", label: "X", match: (r) => r.status === "xtap" },
   { id: "won", label: "当選", match: (r) => r.status === "won" },
-  { id: "manual", label: "要手動", match: (r) => r.status === "manual" },
   { id: "success", label: "応募済み", match: (r) => r.status === "success" || r.status === "won" },
-  { id: "failed", label: "失敗", match: (r) => r.status === "failed" },
   { id: "pending", label: "未処理", match: (r) => r.status === "pending" },
   { id: "all", label: "すべて", match: () => true },
 ];
@@ -342,20 +343,15 @@ function renderStats(all) {
   const today = todayJst();
   const count = (s) => all.filter((r) => r.status === s).length;
   const todaySuccess = state.entries.filter((e) => e.status === "success" && e.appliedAt && new Date(Date.parse(e.appliedAt) + 9 * 3600e3).toISOString().slice(0, 10) === today).length;
-  const tried = count("success") + count("won") + count("failed");
-  const rate = tried ? Math.round(((count("success") + count("won")) / tried) * 100) : null;
   const stats = [
     ["応募済み", count("success") + count("won")],
     ["当選", count("won")],
-    ["要手動", count("manual")],
-    ["失敗", count("failed")],
     ["未処理", count("pending")],
     ["X待ち", count("xtap")],
   ];
   $("#stats").replaceChildren(
     ...stats.map(([label, n]) => el("span", { class: "stat" }, label, " ", el("b", {}, n))),
     el("span", { class: "stat muted" }, `今日 +${todaySuccess}`),
-    rate === null ? null : el("span", { class: "stat muted" }, `成功率 ${rate}%`),
   );
   const lr = state.lastRun;
   $("#last-run").textContent = lr
