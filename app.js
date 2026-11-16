@@ -259,7 +259,9 @@ function xTapActions(r) {
     box.append(tapLink("like", "いいね（条件にあれば）", `https://x.com/intent/like?tweet_id=${x.statusId}`, "btn ghost"));
     box.append(el("a", { class: "btn ghost", href: `https://x.com/${x.user}/status/${x.statusId}`, target: "_blank", rel: "noopener noreferrer" }, "投稿を見る"));
   } else {
-    box.append(tapLink("repost", "② 投稿を探してリポスト", `https://x.com/${encodeURIComponent(x.user)}`));
+    // 投稿が特定できていない懸賞は、そのアカウントのキャンペーン投稿だけを X で検索して開く
+    const q = `from:${x.user} (フォロー OR リポスト OR プレゼント OR キャンペーン OR 抽選)`;
+    box.append(tapLink("repost", "② 投稿を検索してリポスト", `https://x.com/search?q=${encodeURIComponent(q)}&f=live`));
   }
   box.append(
     el("button", { type: "button", class: "btn primary", onclick: () => markDone(r, { quick: true, reason: "X ワンタップで応募" }) }, "③ 応募完了"),
