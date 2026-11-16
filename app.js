@@ -259,9 +259,8 @@ function xTapActions(r) {
     box.append(tapLink("like", "いいね（条件にあれば）", `https://x.com/intent/like?tweet_id=${x.statusId}`, "btn ghost"));
     box.append(el("a", { class: "btn ghost", href: `https://x.com/${x.user}/status/${x.statusId}`, target: "_blank", rel: "noopener noreferrer" }, "投稿を見る"));
   } else {
-    // 投稿が特定できていない懸賞は、そのアカウントのキャンペーン投稿だけを X で検索して開く
-    const q = `from:${x.user} (フォロー OR リポスト OR プレゼント OR キャンペーン OR 抽選)`;
-    box.append(tapLink("repost", "② 投稿を検索してリポスト", `https://x.com/search?q=${encodeURIComponent(q)}&f=live`));
+    // 手動で追加したアカウントページ：そのアカウントのページを開く
+    box.append(tapLink("repost", "② 投稿を探してリポスト", `https://x.com/${encodeURIComponent(x.user)}`));
   }
   box.append(
     el("button", { type: "button", class: "btn primary", onclick: () => markDone(r, { quick: true, reason: "X ワンタップで応募" }) }, "③ 応募完了"),
@@ -277,6 +276,8 @@ function rows() {
   const out = [];
   for (const c of state.campaigns) {
     seen.add(c.id);
+    // 「その場で当たる」X キャンペーンと、投稿が分からない X の懸賞は表示しない（次の実行でデータからも消える）
+    if (c.method === "x" && c.source !== "manual" && (/その場で(当た|当選)/.test(c.title || "") || (/^https?:\/\/(www\.|mobile\.)?(x|twitter)\.com\//.test(c.url) && !parseXUrl(c.url)?.statusId))) continue;
     const e = entryById.get(c.id);
     let status = e ? e.status : "pending";
     let reason = e ? e.reason : null;
