@@ -17,6 +17,7 @@ const state = {
   wins: [],
   accounts: [],
   lastRun: null,
+  xTapped: loadXTapped(),
   settings: { version: 1, sources: {} },
   sources: [],
   tab: "soon",
@@ -200,13 +201,70 @@ function safeHref(url) {
   }
 }
 
-/** X の懸賞が「処理待ち」になっている理由（前回の実行結果から） */
-function xWaitReason() {
-  const sm = state.lastRun?.summary || {};
-  if (sm.x_nocookie) return "X 処理待ち：X の Cookie（Secrets の X_COOKIES_JSON）が未登録です";
-  if (sm.x_badcookie) return "X 処理待ち：X_COOKIES_JSON の形式が正しくありません（auth_token が必要）";
-  if (sm.x_stopped) return "X 処理待ち：X のログインが切れました。Cookie を取り直して X_COOKIES_JSON を更新してください";
-  return "X で自動処理待ち（フォロー＆リポスト・1日10件まで順番に処理）";
+/** x.com のポスト／アカウントの URL から、アカウント名とポストID を取り出す */
+function parseXUrl(url) {
+  try {
+    const u = new URL(url);
+    if (!/^(www\.|mobile\.)?(x|twitter)\.com$/.test(u.hostname)) return null;
+    const m = u.pathname.match(/^\/([A-Za-z0-9_]{1,15})(?:\/status(?:es)?\/(\d+))?\/?$/);
+    if (!m || /^(home|search|explore|i|settings|intent|hashtag|share|notifications|messages|login|signup|compose)$/i.test(m[1])) return null;
+    return { user: m[1], statusId: m[2] || null };
+  } catch {
+    return null;
+  }
+}
+
+/** ワンタップ応募で押したボタン（この端末だけに記録） */
+const XTAP_KEY = "kensho-auto:xtap";
+function loadXTapped() {
+  try {
+    return JSON.parse(localStorage.getItem(XTAP_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+function saveXTapped() {
+  try {
+    localStorage.setItem(XTAP_KEY, JSON.stringify(state.xTapped));
+  } catch {
+    /* 保存できない環境では、この画面を開いている間だけ覚える */
+  }
+}
+
+/** X ワンタップ応募のボタン（フォロー → リポスト → いいね（任意）→ 応募完了） */
+function xTapActions(r) {
+  const x = parseXUrl(r.url);
+  const box = el("div", { class: "card-actions xtap" });
+  if (!x) return box;
+  const tapped = state.xTapped[r.id] || {};
+  const tapLink = (key, label, href, cls = "btn") =>
+    el(
+      "a",
+      {
+        class: `${cls}${tapped[key] ? " done" : ""}`,
+        href,
+        target: "_blank",
+        rel: "noopener noreferrer",
+        onclick: () => {
+          state.xTapped[r.id] = { ...(state.xTapped[r.id] || {}), [key]: true };
+          saveXTapped();
+          setTimeout(render, 300);
+        },
+      },
+      tapped[key] ? `✓ ${label}` : label,
+    );
+  box.append(tapLink("follow", "① フォロー", `https://x.com/intent/follow?screen_name=${encodeURIComponent(x.user)}`));
+  if (x.statusId) {
+    box.append(tapLink("repost", "② リポスト", `https://x.com/intent/retweet?tweet_id=${x.statusId}`));
+    box.append(tapLink("like", "いいね（条件にあれば）", `https://x.com/intent/like?tweet_id=${x.statusId}`, "btn ghost"));
+    box.append(el("a", { class: "btn ghost", href: `https://x.com/${x.user}/status/${x.statusId}`, target: "_blank", rel: "noopener noreferrer" }, "投稿を見る"));
+  } else {
+    box.append(tapLink("repost", "② 投稿を探してリポスト", `https://x.com/${encodeURIComponent(x.user)}`));
+  }
+  box.append(
+    el("button", { type: "button", class: "btn primary", onclick: () => markDone(r, { quick: true, reason: "X ワンタップで応募" }) }, "③ 応募完了"),
+  );
+  return box;
 }
 
 /** 懸賞 + 応募結果 を1行にまとめる */
@@ -223,8 +281,8 @@ function rows() {
     // X のポスト・アカウントは X モジュールで自動処理。それ以外の Web 以外（ハガキ・Instagram 等）は手動
     if (!e && c.method === "x") {
       const isX = /^https?:\/\/(www\.|mobile\.)?(x|twitter)\.com\//.test(c.url);
-      status = isX ? "pending" : "manual";
-      reason = isX ? xWaitReason() : "X キャンペーン（投稿のURLが不明のため手動）";
+      status = isX ? "xtap" : "manual";
+      reason = isX ? null : "X キャンペーン（投稿のURLが不明のため手動）";
     } else if (!e && c.method !== "web") {
       status = "manual";
       reason = "Web フォーム以外の応募方式";
@@ -248,12 +306,13 @@ function rows() {
 }
 
 const STATUS_LABEL = {
-  won: "当選", success: "応募済み", failed: "失敗", manual: "要手動", closed: "締切済み", pending: "未処理",
+  won: "当選", success: "応募済み", failed: "失敗", manual: "要手動", closed: "締切済み", pending: "未処理", xtap: "X応募待ち",
   x_success: "X応募済み", x_failed: "X失敗", x_manual: "X要手動",
   x_nocookie: "X：Cookie未登録", x_badcookie: "X：Cookie形式エラー", x_stopped: "X：ログイン切れで停止",
 };
 const TABS = [
   { id: "soon", label: "締切間近", match: (r) => !["success", "closed"].includes(r.status) && r.deadline && daysUntil(r.deadline) >= 0 && daysUntil(r.deadline) <= SOON_DAYS },
+  { id: "xtap", label: "X", match: (r) => r.status === "xtap" },
   { id: "won", label: "当選", match: (r) => r.status === "won" },
   { id: "manual", label: "要手動", match: (r) => r.status === "manual" },
   { id: "success", label: "応募済み", match: (r) => r.status === "success" || r.status === "won" },
@@ -287,6 +346,7 @@ function renderStats(all) {
     ["要手動", count("manual")],
     ["失敗", count("failed")],
     ["未処理", count("pending")],
+    ["X待ち", count("xtap")],
   ];
   $("#stats").replaceChildren(
     ...stats.map(([label, n]) => el("span", { class: "stat" }, label, " ", el("b", {}, n))),
@@ -361,7 +421,7 @@ function card(r) {
   if (r.status === "manual" && href) {
     titleNode.replaceWith(el("a", { class: "card-title link", href, target: "_blank", rel: "noopener noreferrer", onclick: (e) => e.stopPropagation() }, r.title || r.url, " ↗"));
   }
-  return el("li", {}, body);
+  return el("li", {}, body, r.status === "xtap" ? xTapActions(r) : null);
 }
 
 function render() {
@@ -508,8 +568,8 @@ async function runOne(url) {
   }
 }
 
-async function markDone(r) {
-  if (!confirm("手動で応募済みとして記録しますか？")) return;
+async function markDone(r, opts = {}) {
+  if (!opts.quick && !confirm("手動で応募済みとして記録しますか？")) return;
   try {
     const now = new Date().toISOString();
     const next = await updateJson(
@@ -517,13 +577,17 @@ async function markDone(r) {
       { version: 1, updatedAt: now, lastRun: null, entries: [] },
       (f) => {
         const prev = f.entries.find((x) => x.id === r.id);
-        const e = { id: r.id, url: r.url, title: r.title, method: r.method, status: "success", reason: "手動で応募", attempts: prev ? prev.attempts : 0, submitted: true, lastAttemptAt: now, appliedAt: now, screenshot: prev ? prev.screenshot : null };
+        const e = { id: r.id, url: r.url, title: r.title, method: r.method, status: "success", reason: opts.reason || "手動で応募", attempts: prev ? prev.attempts : 0, submitted: true, lastAttemptAt: now, appliedAt: now, screenshot: prev ? prev.screenshot : null };
         f.entries = f.entries.filter((x) => x.id !== r.id).concat(e);
         return f;
       },
       `kensho-auto: 手動で応募済み ${r.id}`,
     );
     state.entries = next.entries;
+    if (state.xTapped[r.id]) {
+      delete state.xTapped[r.id];
+      saveXTapped();
+    }
     render();
     toast("応募済みにしました");
   } catch (e) {
