@@ -200,6 +200,15 @@ function safeHref(url) {
   }
 }
 
+/** X の懸賞が「処理待ち」になっている理由（前回の実行結果から） */
+function xWaitReason() {
+  const sm = state.lastRun?.summary || {};
+  if (sm.x_nocookie) return "X 処理待ち：X の Cookie（Secrets の X_COOKIES_JSON）が未登録です";
+  if (sm.x_badcookie) return "X 処理待ち：X_COOKIES_JSON の形式が正しくありません（auth_token が必要）";
+  if (sm.x_stopped) return "X 処理待ち：X のログインが切れました。Cookie を取り直して X_COOKIES_JSON を更新してください";
+  return "X で自動処理待ち（フォロー＆リポスト・1日10件まで順番に処理）";
+}
+
 /** 懸賞 + 応募結果 を1行にまとめる */
 function rows() {
   const entryById = new Map(state.entries.map((e) => [e.id, e]));
@@ -215,7 +224,7 @@ function rows() {
     if (!e && c.method === "x") {
       const isX = /^https?:\/\/(www\.|mobile\.)?(x|twitter)\.com\//.test(c.url);
       status = isX ? "pending" : "manual";
-      reason = isX ? "X で自動処理待ち（フォロー＆リポスト）" : "X キャンペーン（投稿のURLが不明のため手動）";
+      reason = isX ? xWaitReason() : "X キャンペーン（投稿のURLが不明のため手動）";
     } else if (!e && c.method !== "web") {
       status = "manual";
       reason = "Web フォーム以外の応募方式";
@@ -238,7 +247,11 @@ function rows() {
   return out;
 }
 
-const STATUS_LABEL = { won: "当選", success: "応募済み", failed: "失敗", manual: "要手動", closed: "締切済み", pending: "未処理" };
+const STATUS_LABEL = {
+  won: "当選", success: "応募済み", failed: "失敗", manual: "要手動", closed: "締切済み", pending: "未処理",
+  x_success: "X応募済み", x_failed: "X失敗", x_manual: "X要手動",
+  x_nocookie: "X：Cookie未登録", x_badcookie: "X：Cookie形式エラー", x_stopped: "X：ログイン切れで停止",
+};
 const TABS = [
   { id: "soon", label: "締切間近", match: (r) => !["success", "closed"].includes(r.status) && r.deadline && daysUntil(r.deadline) >= 0 && daysUntil(r.deadline) <= SOON_DAYS },
   { id: "won", label: "当選", match: (r) => r.status === "won" },
