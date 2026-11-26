@@ -313,7 +313,7 @@ function rows() {
 }
 
 const STATUS_LABEL = {
-  won: "当選", success: "応募済み", failed: "失敗", manual: "要手動", closed: "締切済み", pending: "未処理", xtap: "X応募待ち",
+  won: "当選", success: "応募済み", failed: "失敗", manual: "要手動", closed: "締切済み", pending: "未応募", xtap: "X応募待ち",
   x_success: "X応募済み", x_failed: "X失敗", x_manual: "X要手動",
   x_nocookie: "X：Cookie未登録", x_badcookie: "X：Cookie形式エラー", x_stopped: "X：ログイン切れで停止",
 };
@@ -322,7 +322,12 @@ const TABS = [
   { id: "xtap", label: "X", match: (r) => r.status === "xtap" },
   { id: "won", label: "当選", match: (r) => r.status === "won" },
   { id: "success", label: "応募済み", match: (r) => r.status === "success" || r.status === "won" },
-  { id: "pending", label: "未処理", match: (r) => r.status === "pending" },
+  { id: "pending", label: "未応募", match: (r) => r.status === "pending" },
+  {
+    id: "new",
+    label: "新着24h",
+    match: (r) => (r.status === "pending" || r.status === "xtap") && r.addedAt && Date.now() - Date.parse(r.addedAt) < 24 * 3600e3,
+  },
   { id: "all", label: "すべて", match: () => true },
 ];
 
@@ -343,20 +348,21 @@ function renderStats(all) {
   const today = todayJst();
   const count = (s) => all.filter((r) => r.status === s).length;
   const todaySuccess = state.entries.filter((e) => e.status === "success" && e.appliedAt && new Date(Date.parse(e.appliedAt) + 9 * 3600e3).toISOString().slice(0, 10) === today).length;
+  const jstDay = (iso) => (iso ? new Date(Date.parse(iso) + 9 * 3600e3).toISOString().slice(0, 10) : "");
+  const visible = new Set(all.map((r) => r.id));
+  const newToday = state.campaigns.filter((c) => visible.has(c.id) && jstDay(c.addedAt) === today).length;
   const stats = [
+    ["今日の新着", newToday],
+    ["未応募", count("pending") + count("xtap")],
     ["応募済み", count("success") + count("won")],
     ["当選", count("won")],
-    ["未処理", count("pending")],
-    ["X待ち", count("xtap")],
   ];
   $("#stats").replaceChildren(
     ...stats.map(([label, n]) => el("span", { class: "stat" }, label, " ", el("b", {}, n))),
-    el("span", { class: "stat muted" }, `今日 +${todaySuccess}`),
+    el("span", { class: "stat muted" }, `今日の応募 +${todaySuccess}`),
   );
-  const lr = state.lastRun;
-  $("#last-run").textContent = lr
-    ? `${fmtDateTime(lr.at)}（${Object.entries(lr.summary || {}).map(([k, v]) => `${STATUS_LABEL[k] || k} ${v}`).join(" / ") || "対象なし"}）`
-    : "まだ実行されていません";
+  // kensho-auto は収集だけを行う（応募は Pickle）。最後に懸賞の一覧が更新された時刻を出す
+  $("#last-run").textContent = state.campaignsUpdatedAt ? fmtDateTime(state.campaignsUpdatedAt) : "まだ収集されていません";
 }
 
 function renderTabs(all) {
@@ -530,6 +536,7 @@ async function loadAll() {
     state.accounts = a.data.accounts || [];
     state.wins = w.data.wins || [];
     state.campaigns = c.data.campaigns || [];
+    state.campaignsUpdatedAt = c.data.updatedAt || null;
     state.entries = e.data.entries || [];
     state.lastRun = e.data.lastRun || null;
     state.settings = s.data;
@@ -546,11 +553,10 @@ async function loadAll() {
 }
 
 async function runNow() {
-  const dry = $("#run-dry").checked;
-  if (!dry && !confirm("今すぐ応募を実行しますか？")) return;
+  if (!confirm("今すぐ懸賞を収集しますか？（応募は Pickle が行います）")) return;
   try {
-    await dispatch({ dry_run: dry });
-    toast(dry ? "dry-run を開始しました" : "実行を開始しました（数分かかります）");
+    await dispatch({ dry_run: false });
+    toast("収集を開始しました（数分かかります）");
     setTimeout(renderRuns, 4000);
   } catch (e) {
     toast(explain(e));

@@ -9,7 +9,7 @@
   <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src https://api.github.com; img-src 'self' data:; base-uri 'none'; form-action 'none'">
   <title>kensho-auto</title>
-  <link rel="stylesheet" href="style.css?v=202611161825">
+  <link rel="stylesheet" href="style.css?v=202611261101">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
@@ -48,10 +48,9 @@
     <p class="stats" id="stats" aria-label="統計"></p>
 
     <section class="run">
-      <div class="small muted">最終実行 <span id="last-run">-</span></div>
+      <div class="small muted">最終収集 <span id="last-run">-</span>（応募は Pickle）</div>
       <div class="row">
-        <button id="btn-run" class="primary" type="button">今すぐ実行</button>
-        <label class="check small muted"><input type="checkbox" id="run-dry"> dry-run（送信しない）</label>
+        <button id="btn-run" class="primary" type="button">今すぐ収集</button>
       </div>
       <ul id="runs" class="runs small muted"></ul>
     </section>
@@ -104,6 +103,6 @@
 
   <div id="toast" class="toast" role="status" hidden></div>
 
-  <script src="app.js?v=202611161825"></script>
+  <script src="app.js?v=202611261101"></script>
 </body>
 </html>
