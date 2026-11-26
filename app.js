@@ -323,11 +323,6 @@ const TABS = [
   { id: "won", label: "当選", match: (r) => r.status === "won" },
   { id: "success", label: "応募済み", match: (r) => r.status === "success" || r.status === "won" },
   { id: "pending", label: "未応募", match: (r) => r.status === "pending" },
-  {
-    id: "new",
-    label: "新着24h",
-    match: (r) => (r.status === "pending" || r.status === "xtap") && r.addedAt && Date.now() - Date.parse(r.addedAt) < 24 * 3600e3,
-  },
   { id: "all", label: "すべて", match: () => true },
 ];
 
