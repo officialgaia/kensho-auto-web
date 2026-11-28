@@ -20,7 +20,7 @@ const state = {
   xTapped: loadXTapped(),
   settings: { version: 1, sources: {} },
   sources: [],
-  tab: "soon",
+  tab: "pending",
   query: "",
   method: "",
 };
@@ -318,12 +318,10 @@ const STATUS_LABEL = {
   x_nocookie: "X：Cookie未登録", x_badcookie: "X：Cookie形式エラー", x_stopped: "X：ログイン切れで停止",
 };
 const TABS = [
-  { id: "soon", label: "締切間近", match: (r) => !["success", "closed"].includes(r.status) && r.deadline && daysUntil(r.deadline) >= 0 && daysUntil(r.deadline) <= SOON_DAYS },
   { id: "xtap", label: "X", match: (r) => r.status === "xtap" },
   { id: "won", label: "当選", match: (r) => r.status === "won" },
   { id: "success", label: "応募済み", match: (r) => r.status === "success" || r.status === "won" },
   { id: "pending", label: "未応募", match: (r) => r.status === "pending" },
-  { id: "all", label: "すべて", match: () => true },
 ];
 
 /* ---------- 描画 ---------- */
