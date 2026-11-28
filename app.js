@@ -318,9 +318,9 @@ const STATUS_LABEL = {
   x_nocookie: "X：Cookie未登録", x_badcookie: "X：Cookie形式エラー", x_stopped: "X：ログイン切れで停止",
 };
 const TABS = [
-  { id: "xtap", label: "X", match: (r) => r.status === "xtap" },
   { id: "won", label: "当選", match: (r) => r.status === "won" },
   { id: "success", label: "応募済み", match: (r) => r.status === "success" || r.status === "won" },
+  { id: "xtap", label: "X", match: (r) => r.status === "xtap" },
   { id: "pending", label: "未応募", match: (r) => r.status === "pending" },
 ];
 
